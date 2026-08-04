@@ -1,0 +1,219 @@
+@import "tailwindcss";
+
+/*
+ * Us — warm light theme.
+ *
+ * The palette is deliberately low-contrast and paper-like: sand and cream
+ * grounds, a muted clay rose for anything that asks for attention, sage for
+ * things that went well, honey for gentle nudges. Nothing saturated, nothing
+ * that reads as an alert, no reds. This is a home, not a dashboard.
+ */
+@theme {
+  /* Grounds */
+  --color-canvas: #faf5ef;
+  --color-canvas-deep: #f3ebe1;
+  --color-surface: #fffdfa;
+  --color-surface-muted: #f7f0e7;
+  --color-surface-sunken: #f1e8dc;
+
+  /* Lines */
+  --color-line: #e9dccc;
+  --color-line-strong: #dbc9b3;
+
+  /* Text */
+  --color-ink: #3a3028;
+  --color-ink-soft: #6e6055;
+  --color-ink-faint: #a09183;
+  --color-ink-inverse: #fffdfa;
+
+  /* Soft pink — the primary accent */
+  --color-accent: #c97b8a;
+  --color-accent-hover: #b86a79;
+  --color-accent-ink: #8f4f5c;
+  --color-accent-soft: #f8e8ec;
+  --color-accent-line: #efd0d7;
+
+  /* Sage — good news, positive-only celebrations */
+  --color-sage: #6f8f73;
+  --color-sage-ink: #4f6b53;
+  --color-sage-soft: #e6eee4;
+  --color-sage-line: #cfe0cd;
+
+  /* Honey — gentle nudges and pending things */
+  --color-honey: #c39440;
+  --color-honey-ink: #8d6a2a;
+  --color-honey-soft: #faefd9;
+  --color-honey-line: #f0dcb6;
+
+  /* Lilac — reflections and anything sealed */
+  --color-lilac: #8878a6;
+  --color-lilac-ink: #5f5280;
+  --color-lilac-soft: #eee9f5;
+  --color-lilac-line: #ddd4ea;
+
+  /* Type */
+  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-serif: var(--font-fraunces), "Iowan Old Style", Palatino, Georgia,
+    serif;
+
+  /* Rounded, soft-cornered everything */
+  --radius-xs: 0.5rem;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 1.75rem;
+  --radius-3xl: 2.25rem;
+
+  /* Shadows: barely there, warm-tinted */
+  --shadow-soft: 0 1px 2px rgba(58, 48, 40, 0.04),
+    0 8px 24px -12px rgba(58, 48, 40, 0.1);
+  --shadow-lifted: 0 2px 4px rgba(58, 48, 40, 0.05),
+    0 16px 40px -16px rgba(58, 48, 40, 0.16);
+  --shadow-inset: inset 0 1px 2px rgba(58, 48, 40, 0.05);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Faint warm wash so large empty areas don't look flat. */
+    background-image: radial-gradient(
+        60rem 40rem at 12% -10%,
+        rgba(192, 122, 103, 0.06),
+        transparent 60%
+      ),
+      radial-gradient(
+        48rem 32rem at 100% 0%,
+        rgba(136, 120, 166, 0.05),
+        transparent 60%
+      );
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+  }
+
+  ::selection {
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent-ink);
+  }
+
+  /* One consistent focus treatment everywhere, keyboard-only. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  /* Warm, unobtrusive scrollbars where the browser allows it. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-line-strong);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer utilities {
+  /* Numeric columns (ratings, scores) that shouldn't jitter as they change. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Sealed reflection content: present but unreadable. */
+  .sealed {
+    filter: blur(7px);
+    opacity: 0.5;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-in,
+    .animate-rise {
+      animation: none !important;
+    }
+  }
+
+  .animate-in {
+    animation: fade-in 0.35s ease-out both;
+  }
+
+  .animate-rise {
+    animation: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
