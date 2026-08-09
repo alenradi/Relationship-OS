@@ -10,13 +10,14 @@ A private relationship operating system for exactly one couple. Agreements, dail
 
 This app needs a **brand-new** Supabase project (do not reuse an existing one) and stays **local-only** until you ask for GitHub / Vercel.
 
-When you're ready, create a Supabase project and send me:
+Fill `.env.local` with the project URL, publishable/anon key, and service role key.
 
-1. Project URL (`NEXT_PUBLIC_SUPABASE_URL`)
-2. Anon key (`NEXT_PUBLIC_SUPABASE_ANON_KEY`)
-3. Service role key (`SUPABASE_SERVICE_ROLE_KEY`) — used only for `npm run seed`
+To apply migrations from the CLI (instead of the SQL editor), also provide either:
 
-I'll wire env, apply migrations, and seed the demo accounts.
+- `DATABASE_URL` — Settings → Database → URI, then `npm run db:migrate`
+- or `SUPABASE_ACCESS_TOKEN` — [Account → Access Tokens](https://supabase.com/dashboard/account/tokens), then `npm run db:migrate`
+
+Then run `npm run seed`. For a private demo, disable **Confirm email** under Authentication → Providers → Email.
 
 ---
 
