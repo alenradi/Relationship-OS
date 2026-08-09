@@ -1,4 +1,4 @@
-# Ilaria & Alen — Us
+Us
 
 A private relationship operating system for exactly one couple. Agreements, daily rhythm, weekly reflections, goals, conflict archive, and future plans — warm, calm, and fully self-contained.
 
