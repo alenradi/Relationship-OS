@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "db:migrate": "node scripts/apply-migrations.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.4",
@@ -28,6 +29,7 @@
     "dotenv": "17.4.2",
     "eslint": "9.39.5",
     "eslint-config-next": "16.2.12",
+    "pg": "^8.23.0",
     "tailwindcss": "4.3.3",
     "tsx": "4.23.1",
     "typescript": "5.9.3"
