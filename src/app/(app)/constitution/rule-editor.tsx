@@ -20,22 +20,33 @@ const CATEGORIES: RuleCategory[] = [
 ];
 const STATUSES: RuleStatus[] = ["active", "renegotiated", "retired"];
 
+export type RulePreset = {
+  title: string;
+  description: string;
+  why_agreed: string;
+  category: RuleCategory;
+};
+
 export function RuleEditor({
   open,
   rule,
+  preset,
   onClose,
 }: {
   open: boolean;
   rule: RuleRow | null;
+  preset?: RulePreset | null;
   onClose: () => void;
 }) {
   const editing = Boolean(rule);
 
-  const [title, setTitle] = useState(rule?.title ?? "");
-  const [description, setDescription] = useState(rule?.description ?? "");
-  const [why, setWhy] = useState(rule?.why_agreed ?? "");
+  const [title, setTitle] = useState(rule?.title ?? preset?.title ?? "");
+  const [description, setDescription] = useState(
+    rule?.description ?? preset?.description ?? "",
+  );
+  const [why, setWhy] = useState(rule?.why_agreed ?? preset?.why_agreed ?? "");
   const [category, setCategory] = useState<RuleCategory>(
-    rule?.category ?? "communication",
+    rule?.category ?? preset?.category ?? "communication",
   );
   const [status, setStatus] = useState<RuleStatus>(rule?.status ?? "active");
   const [changeNote, setChangeNote] = useState("");

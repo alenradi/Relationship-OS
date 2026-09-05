@@ -51,8 +51,6 @@ export async function completeOnboardingAction(
     .filter((rule) => rule.title.length > 0)
     .map((rule, index) => ({ ...rule, sort_order: index }));
 
-  if (rules.length === 0) return { error: copy.onboarding.needAtLeastOne };
-
   const { error: profileError } = await supabase
     .from("profiles")
     .update({ display_name: displayName })
@@ -67,8 +65,10 @@ export async function completeOnboardingAction(
     .eq("couple_id", couple.id);
   if (clearError) return { error: clearError.message };
 
-  const { error: rulesError } = await supabase.from("rules").insert(rules);
-  if (rulesError) return { error: rulesError.message };
+  if (rules.length > 0) {
+    const { error: rulesError } = await supabase.from("rules").insert(rules);
+    if (rulesError) return { error: rulesError.message };
+  }
 
   const now = new Date().toISOString();
   const { error: coupleError } = await supabase

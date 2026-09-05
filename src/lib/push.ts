@@ -2,6 +2,7 @@ import webpush from "web-push";
 
 import { copy } from "@/lib/copy";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { VAPID_PUBLIC_KEY } from "@/lib/vapid-public";
 
 export type PushPayload = {
   title: string;
@@ -10,16 +11,13 @@ export type PushPayload = {
 };
 
 function vapidConfigured() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY,
-  );
+  return Boolean(VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
 }
 
 function configure() {
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
-  if (!publicKey || !privateKey) return false;
-  webpush.setVapidDetails("mailto:alen.radi@gmail.com", publicKey, privateKey);
+  if (!VAPID_PUBLIC_KEY || !privateKey) return false;
+  webpush.setVapidDetails("mailto:alen.radi@gmail.com", VAPID_PUBLIC_KEY, privateKey);
   return true;
 }
 

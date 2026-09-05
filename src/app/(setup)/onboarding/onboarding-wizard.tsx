@@ -126,10 +126,6 @@ export function OnboardingWizard({
 
   function goNextFromConstitution() {
     setError(null);
-    if (chosen.length === 0) {
-      setError(copy.onboarding.needAtLeastOne);
-      return;
-    }
     goTo("finish");
   }
 
@@ -397,31 +393,35 @@ export function OnboardingWizard({
               {copy.onboarding.finishTitle}
             </CardTitle>
             <CardDescription>
-              {solo
-                ? copy.onboarding.soloFinishBody
-                : copy.onboarding.finishBody}
+              {chosen.length === 0
+                ? copy.onboarding.finishBodyNone
+                : solo
+                  ? copy.onboarding.soloFinishBody
+                  : copy.onboarding.finishBody}
             </CardDescription>
           </Card>
 
-          <Card tone="muted" className="space-y-3">
-            <p className="text-sm font-medium text-ink">
-              {copy.onboarding.selectedCount(chosen.length)}
-            </p>
-            <ul className="space-y-2.5">
-              {chosen.map((draft) => (
-                <li key={draft.key} className="space-y-0.5">
-                  <p className="text-sm font-medium text-ink text-pretty">
-                    {draft.title}
-                  </p>
-                  {draft.why_agreed ? (
-                    <p className="text-xs leading-relaxed text-ink-soft text-pretty">
-                      {copy.constitution.whyWeAgreed}: {draft.why_agreed}
+          {chosen.length > 0 ? (
+            <Card tone="muted" className="space-y-3">
+              <p className="text-sm font-medium text-ink">
+                {copy.onboarding.selectedCount(chosen.length)}
+              </p>
+              <ul className="space-y-2.5">
+                {chosen.map((draft) => (
+                  <li key={draft.key} className="space-y-0.5">
+                    <p className="text-sm font-medium text-ink text-pretty">
+                      {draft.title}
                     </p>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </Card>
+                    {draft.why_agreed ? (
+                      <p className="text-xs leading-relaxed text-ink-soft text-pretty">
+                        {copy.constitution.whyWeAgreed}: {draft.why_agreed}
+                      </p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          ) : null}
 
           {partnerName ? (
             <p className="text-xs text-ink-faint text-pretty">

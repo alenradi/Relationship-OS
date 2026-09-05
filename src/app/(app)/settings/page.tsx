@@ -8,6 +8,7 @@ import { copy } from "@/lib/copy";
 import { APP_TIMEZONE, formatLongDate } from "@/lib/dates";
 import { displayName } from "@/lib/people";
 import { requireCouple } from "@/lib/session";
+import { VAPID_PUBLIC_KEY } from "@/lib/vapid-public";
 
 import { ProfileForm } from "./profile-form";
 import { PushToggle } from "./push-toggle";
@@ -75,7 +76,7 @@ export default async function SettingsPage() {
           </CardTitle>
           <CardDescription>{copy.settings.pushBody}</CardDescription>
         </div>
-        <PushToggle vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""} />
+        <PushToggle vapidPublicKey={VAPID_PUBLIC_KEY} />
       </Card>
 
       <Card className="flex flex-wrap items-center justify-between gap-3">

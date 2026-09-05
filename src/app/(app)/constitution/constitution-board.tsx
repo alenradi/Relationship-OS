@@ -19,7 +19,7 @@ import type {
 import { formatMediumDate } from "@/lib/dates";
 import { displayName } from "@/lib/people";
 
-import { RuleEditor } from "./rule-editor";
+import { RuleEditor, type RulePreset } from "./rule-editor";
 
 const CATEGORY_ORDER: RuleCategory[] = [
   "communication",
@@ -48,6 +48,15 @@ export function ConstitutionBoard({
 }) {
   const [editing, setEditing] = useState<RuleRow | null>(null);
   const [creating, setCreating] = useState(false);
+  const [preset, setPreset] = useState<RulePreset | null>(null);
+
+  const takenTitles = useMemo(
+    () => new Set(rules.map((rule) => rule.title.trim().toLowerCase())),
+    [rules],
+  );
+  const unusedSuggestions = copy.suggestedRules.filter(
+    (suggestion) => !takenTitles.has(suggestion.title.toLowerCase()),
+  );
 
   const nameFor = useMemo(() => {
     const map = new Map(members.map((m) => [m.id, displayName(m)]));
@@ -83,7 +92,13 @@ export function ConstitutionBoard({
               {copy.constitution.historyLink}
             </ButtonLink>
             {editable ? (
-              <Button size="sm" onClick={() => setCreating(true)}>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setPreset(null);
+                  setCreating(true);
+                }}
+              >
                 <PlusIcon className="size-4" />
                 {copy.constitution.addRule}
               </Button>
@@ -110,12 +125,57 @@ export function ConstitutionBoard({
           title={copy.constitution.empty}
           action={
             editable ? (
-              <Button onClick={() => setCreating(true)}>
+              <Button
+                onClick={() => {
+                  setPreset(null);
+                  setCreating(true);
+                }}
+              >
                 {copy.constitution.emptyCta}
               </Button>
             ) : undefined
           }
         />
+      ) : null}
+
+      {editable && unusedSuggestions.length > 0 ? (
+        <section className="space-y-3">
+          <div className="space-y-1">
+            <h2 className="text-xs font-semibold tracking-[0.12em] text-ink-faint uppercase">
+              {copy.constitution.recommendationsTitle}
+            </h2>
+            <p className="text-sm text-ink-soft text-pretty">
+              {copy.constitution.recommendationsHelp}
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {unusedSuggestions.map((suggestion) => (
+              <Card key={suggestion.title} className="space-y-3">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold tracking-wide text-ink-faint uppercase">
+                    {copy.constitution.categories[suggestion.category]}
+                  </p>
+                  <h3 className="text-base leading-snug text-pretty">
+                    {suggestion.title}
+                  </h3>
+                  <p className="text-sm text-ink-soft text-pretty">
+                    {suggestion.description}
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setPreset(suggestion);
+                    setCreating(true);
+                  }}
+                >
+                  {copy.constitution.useRecommendation}
+                </Button>
+              </Card>
+            ))}
+          </div>
+        </section>
       ) : null}
 
       {grouped.map((group) => (
@@ -160,7 +220,16 @@ export function ConstitutionBoard({
 
       {/* Remounted per rule so the form always starts from that rule's values. */}
       {creating && editable ? (
-        <RuleEditor open rule={null} onClose={() => setCreating(false)} />
+        <RuleEditor
+          open
+          key={preset?.title ?? "new-rule"}
+          rule={null}
+          preset={preset}
+          onClose={() => {
+            setCreating(false);
+            setPreset(null);
+          }}
+        />
       ) : null}
       {editing && editable ? (
         <RuleEditor

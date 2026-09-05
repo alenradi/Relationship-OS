@@ -157,6 +157,8 @@ const en = {
     finishTitle: "You're ready",
     finishBody:
       "Your constitution is live. Home is waiting — start with today's rhythm whenever you're ready.",
+    finishBodyNone:
+      "You can write agreements anytime from the constitution — nothing has to be decided today.",
     finishCta: "Enter our home",
     partnerWillSee: (name: string) =>
       `${name} will see all of this on their home screen too.`,
@@ -169,6 +171,7 @@ const en = {
     selectedCount: (n: number) =>
       n === 1 ? "1 agreement selected" : `${n} agreements selected`,
     needAtLeastOne: "Pick or write at least one agreement to continue.",
+    continueWithout: "Continue without any",
     tourOnlyDone: "Back to home",
   },
 
@@ -210,6 +213,10 @@ const en = {
       "Editing unlocks during your monthly review. Mark the review when you're done so the next one starts counting.",
     empty: "You haven't written any agreements yet.",
     emptyCta: "Write your first agreement",
+    recommendationsTitle: "Ideas you can take or leave",
+    recommendationsHelp:
+      "These are starting points, not rules. Add the ones that feel true — skip the rest, or write your own.",
+    useRecommendation: "Use this",
     addRule: "Add an agreement",
     editRule: "Edit agreement",
     newRule: "New agreement",
