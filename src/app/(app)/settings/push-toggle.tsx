@@ -22,23 +22,33 @@ function standalone() {
   );
 }
 
-function initialStatus(vapidPublicKey: string) {
+type PushStatus =
+  | "loading"
+  | "unsupported"
+  | "need-install"
+  | "off"
+  | "on"
+  | "denied";
+
+function initialStatus(vapidPublicKey: string): PushStatus {
   if (
     typeof window === "undefined" ||
     !("serviceWorker" in navigator) ||
     !("PushManager" in window) ||
     !vapidPublicKey
   ) {
-    return "unsupported" as const;
+    return "unsupported";
   }
   if (!standalone() && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    return "need-install" as const;
+    return "need-install";
   }
-  return "loading" as const;
+  return "loading";
 }
 
 export function PushToggle({ vapidPublicKey }: { vapidPublicKey: string }) {
-  const [status, setStatus] = useState(() => initialStatus(vapidPublicKey));
+  const [status, setStatus] = useState<PushStatus>(() =>
+    initialStatus(vapidPublicKey),
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
