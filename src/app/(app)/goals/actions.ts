@@ -9,13 +9,14 @@ import { notifyPartner } from "@/lib/push";
 import { requireCouple } from "@/lib/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export type GoalResult = { error?: string | null };
+export type GoalResult = { error?: string | null; id?: string };
 
 export type GoalInput = {
   id?: string;
   goal_type: GoalType;
   title: string;
   why_it_matters: string;
+  reward_description?: string;
   target_date?: string | null;
   status: GoalStatus;
   milestones: GoalMilestone[];
@@ -54,6 +55,7 @@ export async function saveGoalAction(input: GoalInput): Promise<GoalResult> {
   const values = {
     title,
     why_it_matters: input.why_it_matters.trim(),
+    reward_description: (input.reward_description ?? "").trim(),
     goal_type,
     owner_id,
     target_date: input.target_date?.trim() || null,
@@ -67,17 +69,23 @@ export async function saveGoalAction(input: GoalInput): Promise<GoalResult> {
       .update(values)
       .eq("id", input.id);
     if (error) return { error: error.message };
-  } else {
-    const { error } = await supabase.from("goals").insert({
+    refresh();
+    return { id: input.id };
+  }
+
+  const { data, error } = await supabase
+    .from("goals")
+    .insert({
       ...values,
       couple_id: couple.id,
       created_by: user.id,
-    });
-    if (error) return { error: error.message };
-  }
+    })
+    .select("id")
+    .single();
 
+  if (error || !data) return { error: error?.message ?? copy.errors.generic };
   refresh();
-  return {};
+  return { id: data.id };
 }
 
 export async function deleteGoalAction(id: string): Promise<GoalResult> {

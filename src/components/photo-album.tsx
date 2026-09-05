@@ -21,6 +21,7 @@ export function PhotoAlbum({
   heading,
   emptyHint,
   compact = false,
+  allowUpload = true,
 }: {
   subjectType: PhotoSubjectType;
   subjectId: string;
@@ -30,6 +31,7 @@ export function PhotoAlbum({
   heading?: string;
   emptyHint?: string;
   compact?: boolean;
+  allowUpload?: boolean;
 }) {
   const items = photos.filter(
     (photo) =>
@@ -63,19 +65,25 @@ export function PhotoAlbum({
     });
   }
 
+  const label = heading === "" ? "" : (heading ?? copy.future.albumTitle);
+
   return (
     <div className={cn("space-y-3", compact && "space-y-2")}>
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="text-xs font-semibold tracking-wide text-ink-faint uppercase">
-          {heading ?? copy.future.albumTitle}
-          {items.length > 0 ? ` · ${copy.photos.count(items.length)}` : ""}
-        </p>
-      </div>
+      {label ? (
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-xs font-semibold tracking-wide text-ink-faint uppercase">
+            {label}
+            {items.length > 0 ? ` · ${copy.photos.count(items.length)}` : ""}
+          </p>
+        </div>
+      ) : null}
 
       {items.length === 0 ? (
-        <p className="text-xs text-ink-faint text-pretty">
-          {emptyHint ?? copy.future.albumEmpty}
-        </p>
+        emptyHint === "" ? null : (
+          <p className="text-xs text-ink-faint text-pretty">
+            {emptyHint ?? copy.future.albumEmpty}
+          </p>
+        )
       ) : (
         <ul
           className={cn(
@@ -123,7 +131,7 @@ export function PhotoAlbum({
         </ul>
       )}
 
-      {!atLimit || kind === "reward" ? (
+      {allowUpload && (!atLimit || kind === "reward") ? (
         <div className="space-y-2">
           {kind === "memory" ? (
             <Field htmlFor={`${subjectId}-caption`} className="hidden sm:block">

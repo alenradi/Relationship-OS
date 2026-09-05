@@ -73,6 +73,17 @@ async function main() {
   console.log("Seeding Us demo data…");
 
   const admin = createSupabaseAdminClient();
+  const live = await admin.auth.admin.listUsers({ perPage: 200 });
+  const liveEmails = new Set(["alen.radi@gmail.com", "istopar100@gmail.com"]);
+  if (
+    live.data.users.some((user) =>
+      liveEmails.has(user.email?.toLowerCase() ?? ""),
+    )
+  ) {
+    throw new Error(
+      "Refusing to seed — live Ilaria & Alen accounts exist. This script would wipe your space.",
+    );
+  }
   const today = todayInAppTz();
   const weekStart = currentWeekStart();
   const prevWeek = addDays(weekStart, -7);

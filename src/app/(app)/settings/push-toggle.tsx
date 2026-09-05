@@ -14,11 +14,18 @@ function urlBase64ToUint8Array(base64: string) {
   return output;
 }
 
+function isIosDevice() {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/i.test(ua)) return true;
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+}
+
 function standalone() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
-    ("standalone" in navigator &&
-      Boolean((navigator as Navigator & { standalone?: boolean }).standalone))
+    window.matchMedia("(display-mode: fullscreen)").matches ||
+    Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
   );
 }
 
@@ -26,55 +33,75 @@ type PushStatus =
   | "loading"
   | "unsupported"
   | "need-install"
+  | "missing-key"
   | "off"
   | "on"
   | "denied";
 
-function initialStatus(vapidPublicKey: string): PushStatus {
-  if (
-    typeof window === "undefined" ||
-    !("serviceWorker" in navigator) ||
-    !("PushManager" in window) ||
-    !vapidPublicKey
-  ) {
-    return "unsupported";
-  }
-  if (!standalone() && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    return "need-install";
-  }
-  return "loading";
-}
-
 export function PushToggle({ vapidPublicKey }: { vapidPublicKey: string }) {
-  const [status, setStatus] = useState<PushStatus>(() =>
-    initialStatus(vapidPublicKey),
-  );
+  const [key, setKey] = useState(vapidPublicKey);
+  const [status, setStatus] = useState<PushStatus>("loading");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   useEffect(() => {
-    if (status !== "loading") return;
-
     let cancelled = false;
-    navigator.serviceWorker.ready
-      .then((reg) => reg.pushManager.getSubscription())
-      .then((sub) => {
+
+    async function resolve() {
+      let nextKey = key;
+      if (!nextKey) {
+        try {
+          const res = await fetch("/api/push/vapid");
+          const data = (await res.json()) as { key?: string };
+          nextKey = data.key ?? "";
+          if (!cancelled) setKey(nextKey);
+        } catch {
+          nextKey = "";
+        }
+      }
+
+      if (isIosDevice() && !standalone()) {
+        if (!cancelled) setStatus("need-install");
+        return;
+      }
+
+      if (!nextKey) {
+        if (!cancelled) setStatus("missing-key");
+        return;
+      }
+
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        if (!cancelled) {
+          setStatus(isIosDevice() ? "need-install" : "unsupported");
+        }
+        return;
+      }
+
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
         if (cancelled) return;
         if (Notification.permission === "denied") setStatus("denied");
         else setStatus(sub ? "on" : "off");
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setStatus("off");
-      });
+      }
+    }
 
+    void resolve();
     return () => {
       cancelled = true;
     };
-  }, [status]);
+  }, [key]);
 
   function enable() {
     setError(null);
     start(async () => {
+      if (!key) {
+        setStatus("missing-key");
+        return;
+      }
+
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
         setStatus("denied");
@@ -84,7 +111,7 @@ export function PushToggle({ vapidPublicKey }: { vapidPublicKey: string }) {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        applicationServerKey: urlBase64ToUint8Array(key),
       });
 
       const res = await fetch("/api/push/subscribe", {
@@ -119,8 +146,14 @@ export function PushToggle({ vapidPublicKey }: { vapidPublicKey: string }) {
 
   return (
     <div className="space-y-3">
+      {status === "loading" ? (
+        <p className="text-sm text-ink-faint">{copy.app.loading}</p>
+      ) : null}
       {status === "unsupported" ? (
         <p className="text-sm text-ink-soft">{copy.push.unsupported}</p>
+      ) : null}
+      {status === "missing-key" ? (
+        <p className="text-sm text-ink-soft">{copy.push.missingKey}</p>
       ) : null}
       {status === "need-install" ? (
         <p className="text-sm text-ink-soft">{copy.push.needInstall}</p>

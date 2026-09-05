@@ -167,6 +167,7 @@ export type GoalRow = {
   milestones: GoalMilestone[];
   target_date: string | null;
   status: GoalStatus;
+  reward_description: string;
   created_by: string | null;
 } & Timestamps;
 

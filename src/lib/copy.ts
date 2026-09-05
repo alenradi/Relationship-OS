@@ -442,10 +442,14 @@ const en = {
     targetLabel: (when: string) => `Target: ${when}`,
     overdueLabel: (when: string) => `Target was ${when}`,
     rewardTitle: "The reward",
-    rewardEmpty: "Add a photo of what you got — or did — when this landed.",
+    rewardField: "What you get when it's done",
+    rewardPlaceholder: "Dinner at that place we keep talking about",
+    rewardPhotoHelp: "A photo of the reward — you can add it now, and change it later.",
+    rewardEmpty: "Add a photo of the reward you're working towards.",
     rewardAdd: "Add reward photo",
     rewardReplace: "Change reward photo",
     rewardHint: "A picture of the treat, the trip, the thing you promised yourselves.",
+    rewardSaveFirst: "Save the goal, then you can attach the photo.",
     achieveWithPhotoTitle: "You did it",
     achieveWithPhotoBody:
       "Mark it achieved, and optionally add a photo of the reward so you remember why it was worth it.",
@@ -698,8 +702,9 @@ const en = {
     disable: "Turn off on this phone",
     enabled: "This phone will get the quiet nudges.",
     unsupported: "This browser can't receive home-screen notifications.",
+    missingKey: "Notifications aren't configured on this deploy yet. Try again after a refresh.",
     needInstall:
-      "On iPhone, add Us to your Home Screen first, then open it from there and turn notifications on.",
+      "Safari in a tab can't receive them. Tap Share → Add to Home Screen, open Us from that icon, then come back here and turn notifications on.",
     denied:
       "Notifications are blocked for this app. You can allow them in the phone's Settings.",
     enableFailed: "Couldn't save this phone. Try again in a moment.",

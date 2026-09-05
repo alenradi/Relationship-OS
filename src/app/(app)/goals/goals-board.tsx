@@ -23,6 +23,7 @@ import { formatMediumDate, formatTimeAgo, todayInAppTz } from "@/lib/dates";
 import { displayName } from "@/lib/people";
 import type { PhotoWithUrl } from "@/lib/photos";
 
+import { uploadPhotoAction } from "@/app/(app)/photos/actions";
 import {
   addProgressUpdateAction,
   deleteGoalAction,
@@ -135,6 +136,7 @@ export function GoalsBoard({
         <GoalEditor
           open
           goal={null}
+          photos={photos}
           defaultType={creating}
           onClose={() => setCreating(null)}
         />
@@ -144,6 +146,7 @@ export function GoalsBoard({
           open
           key={editing.id}
           goal={editing}
+          photos={photos}
           onClose={() => setEditing(null)}
         />
       ) : null}
@@ -264,16 +267,31 @@ function GoalCard({
       </div>
 
       {goal.status === "achieved" ? (
-        <div className="space-y-3">
-          <Notice tone="sage">{copy.goals.achievedBanner}</Notice>
+        <Notice tone="sage">{copy.goals.achievedBanner}</Notice>
+      ) : null}
+
+      {goal.reward_description ||
+      photos.some((p) => p.subject_id === goal.id && p.kind === "reward") ? (
+        <div className="space-y-2">
+          {goal.reward_description ? (
+            <p className="text-sm text-ink-soft text-pretty">
+              <span className="text-xs font-semibold tracking-wide text-ink-faint uppercase">
+                {copy.goals.rewardTitle}
+              </span>
+              <br />
+              {goal.reward_description}
+            </p>
+          ) : null}
           <PhotoAlbum
             subjectType="goal"
             subjectId={goal.id}
             photos={photos}
             kind="reward"
             max={1}
-            heading={copy.goals.rewardTitle}
-            emptyHint={copy.goals.rewardEmpty}
+            heading=""
+            emptyHint=""
+            compact
+            allowUpload={false}
           />
         </div>
       ) : null}
@@ -501,16 +519,21 @@ function AchieveModal({
 function GoalEditor({
   open,
   goal,
+  photos,
   defaultType = "personal",
   onClose,
 }: {
   open: boolean;
   goal: GoalRow | null;
+  photos: PhotoWithUrl[];
   defaultType?: "personal" | "relationship";
   onClose: () => void;
 }) {
   const [title, setTitle] = useState(goal?.title ?? "");
   const [why, setWhy] = useState(goal?.why_it_matters ?? "");
+  const [reward, setReward] = useState(goal?.reward_description ?? "");
+  const [rewardFile, setRewardFile] = useState<File | null>(null);
+  const [savedId, setSavedId] = useState(goal?.id ?? null);
   const [type, setType] = useState<"personal" | "relationship">(
     goal?.goal_type === "relationship" ? "relationship" : defaultType,
   );
@@ -522,20 +545,42 @@ function GoalEditor({
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
+  const photoGoalId = savedId ?? goal?.id ?? null;
+
   function save() {
     setError(null);
     start(async () => {
       const result = await saveGoalAction({
-        id: goal?.id,
+        id: photoGoalId ?? undefined,
         title,
         why_it_matters: why,
+        reward_description: reward,
         goal_type: type,
         target_date: target || null,
         status,
         milestones,
       });
-      if (result.error) setError(result.error);
-      else onClose();
+      if (result.error || !result.id) {
+        setError(result.error ?? copy.errors.generic);
+        return;
+      }
+
+      setSavedId(result.id);
+
+      if (rewardFile) {
+        const data = new FormData();
+        data.set("file", rewardFile);
+        data.set("subjectType", "goal");
+        data.set("subjectId", result.id);
+        data.set("kind", "reward");
+        const upload = await uploadPhotoAction(data);
+        if (upload.error) {
+          setError(upload.error);
+          return;
+        }
+      }
+
+      onClose();
     });
   }
 
@@ -603,6 +648,40 @@ function GoalEditor({
             placeholder={copy.goals.fieldWhyPlaceholder}
           />
         </Field>
+
+        <Field
+          label={copy.goals.rewardField}
+          htmlFor="goal-reward"
+          hint={copy.goals.rewardPhotoHelp}
+          optional
+        >
+          <Textarea
+            id="goal-reward"
+            value={reward}
+            onChange={(e) => setReward(e.target.value)}
+            placeholder={copy.goals.rewardPlaceholder}
+          />
+        </Field>
+
+        {photoGoalId ? (
+          <PhotoAlbum
+            subjectType="goal"
+            subjectId={photoGoalId}
+            photos={photos}
+            kind="reward"
+            max={1}
+            heading={copy.goals.rewardTitle}
+            emptyHint={copy.goals.rewardEmpty}
+          />
+        ) : (
+          <Field label={copy.goals.rewardAdd} optional>
+            <Input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
+              onChange={(event) => setRewardFile(event.target.files?.[0] ?? null)}
+            />
+          </Field>
+        )}
 
         <Field label={copy.goals.fieldTargetDate} htmlFor="goal-target" optional>
           <Input
