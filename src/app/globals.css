@@ -184,7 +184,12 @@
 
   @media (prefers-reduced-motion: reduce) {
     .animate-in,
-    .animate-rise {
+    .animate-rise,
+    .animate-slide-left,
+    .animate-slide-right,
+    .animate-float,
+    .animate-soft-pulse,
+    .animate-stagger > * {
       animation: none !important;
     }
   }
@@ -195,6 +200,42 @@
 
   .animate-rise {
     animation: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-slide-left {
+    animation: slide-left 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-slide-right {
+    animation: slide-right 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-float {
+    animation: float 5.5s ease-in-out infinite;
+  }
+
+  .animate-soft-pulse {
+    animation: soft-pulse 2.8s ease-in-out infinite;
+  }
+
+  .animate-stagger > * {
+    animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-stagger > *:nth-child(1) {
+    animation-delay: 0.04s;
+  }
+  .animate-stagger > *:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+  .animate-stagger > *:nth-child(3) {
+    animation-delay: 0.16s;
+  }
+  .animate-stagger > *:nth-child(4) {
+    animation-delay: 0.22s;
+  }
+  .animate-stagger > *:nth-child(5) {
+    animation-delay: 0.28s;
   }
 }
 
@@ -215,5 +256,49 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@keyframes slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.04);
   }
 }

@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 
 import { PlusIcon } from "@/components/icons";
+import { PhotoAlbum } from "@/components/photo-album";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import type {
 } from "@/lib/database.types";
 import { formatMediumDate, formatTimeAgo, todayInAppTz } from "@/lib/dates";
 import { displayName } from "@/lib/people";
+import type { PhotoWithUrl } from "@/lib/photos";
 
 import {
   addProgressUpdateAction,
@@ -36,12 +38,14 @@ export function GoalsBoard({
   goals,
   updates,
   cheers,
+  photos,
 }: {
   me: ProfileRow;
   partner: ProfileRow | null;
   goals: GoalRow[];
   updates: GoalUpdateRow[];
   cheers: GoalCheerRow[];
+  photos: PhotoWithUrl[];
 }) {
   const [creating, setCreating] = useState<"personal" | "relationship" | null>(
     null,
@@ -90,6 +94,7 @@ export function GoalsBoard({
         goals={mine}
         updates={updates}
         cheers={cheers}
+        photos={photos}
         members={members}
         userId={me.id}
         partner={partner}
@@ -103,6 +108,7 @@ export function GoalsBoard({
         goals={theirs}
         updates={updates}
         cheers={cheers}
+        photos={photos}
         members={members}
         userId={me.id}
         partner={partner}
@@ -117,6 +123,7 @@ export function GoalsBoard({
         goals={ours}
         updates={updates}
         cheers={cheers}
+        photos={photos}
         members={members}
         userId={me.id}
         partner={partner}
@@ -150,6 +157,7 @@ function Lane({
   goals,
   updates,
   cheers,
+  photos,
   members,
   userId,
   partner,
@@ -162,6 +170,7 @@ function Lane({
   goals: GoalRow[];
   updates: GoalUpdateRow[];
   cheers: GoalCheerRow[];
+  photos: PhotoWithUrl[];
   members: ProfileRow[];
   userId: string;
   partner: ProfileRow | null;
@@ -182,6 +191,7 @@ function Lane({
             goal={goal}
             updates={updates.filter((u) => u.goal_id === goal.id)}
             cheers={cheers.filter((c) => c.goal_id === goal.id)}
+            photos={photos}
             members={members}
             userId={userId}
             partner={partner}
@@ -199,9 +209,9 @@ function GoalCard({
   goal,
   updates,
   cheers,
+  photos,
   members,
   userId,
-  partner,
   canEdit,
   canCheer,
   onEdit,
@@ -209,9 +219,10 @@ function GoalCard({
   goal: GoalRow;
   updates: GoalUpdateRow[];
   cheers: GoalCheerRow[];
+  photos: PhotoWithUrl[];
   members: ProfileRow[];
   userId: string;
-  partner: ProfileRow | null;
+  partner?: ProfileRow | null;
   canEdit: boolean;
   canCheer: boolean;
   onEdit?: () => void;
@@ -220,6 +231,7 @@ function GoalCard({
   const [cheerMsg, setCheerMsg] = useState("");
   const [updateBody, setUpdateBody] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [achieveOpen, setAchieveOpen] = useState(false);
   const today = todayInAppTz();
   const doneCount = goal.milestones.filter((m) => m.done).length;
 
@@ -252,7 +264,18 @@ function GoalCard({
       </div>
 
       {goal.status === "achieved" ? (
-        <Notice tone="sage">{copy.goals.achievedBanner}</Notice>
+        <div className="space-y-3">
+          <Notice tone="sage">{copy.goals.achievedBanner}</Notice>
+          <PhotoAlbum
+            subjectType="goal"
+            subjectId={goal.id}
+            photos={photos}
+            kind="reward"
+            max={1}
+            heading={copy.goals.rewardTitle}
+            emptyHint={copy.goals.rewardEmpty}
+          />
+        </div>
       ) : null}
 
       {goal.target_date ? (
@@ -393,14 +416,18 @@ function GoalCard({
           variant="secondary"
           size="sm"
           disabled={pending}
-          onClick={() =>
-            start(async () => {
-              await markAchievedAction(goal.id);
-            })
-          }
+          onClick={() => setAchieveOpen(true)}
         >
           {copy.goals.markAchieved}
         </Button>
+      ) : null}
+
+      {achieveOpen ? (
+        <AchieveModal
+          goal={goal}
+          photos={photos}
+          onClose={() => setAchieveOpen(false)}
+        />
       ) : null}
 
       {error ? (
@@ -409,6 +436,65 @@ function GoalCard({
         </Notice>
       ) : null}
     </Card>
+  );
+}
+
+function AchieveModal({
+  goal,
+  photos,
+  onClose,
+}: {
+  goal: GoalRow;
+  photos: PhotoWithUrl[];
+  onClose: () => void;
+}) {
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={copy.goals.achieveWithPhotoTitle}
+      description={copy.goals.achieveWithPhotoBody}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={pending}>
+            {copy.app.cancel}
+          </Button>
+          <Button
+            disabled={pending}
+            onClick={() =>
+              start(async () => {
+                const result = await markAchievedAction(goal.id);
+                if (result.error) setError(result.error);
+                else onClose();
+              })
+            }
+          >
+            {copy.goals.achieveConfirm}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <p className="text-sm font-medium text-ink">{goal.title}</p>
+        <PhotoAlbum
+          subjectType="goal"
+          subjectId={goal.id}
+          photos={photos}
+          kind="reward"
+          max={1}
+          heading={copy.goals.rewardTitle}
+          emptyHint={copy.goals.rewardHint}
+        />
+        {error ? (
+          <Notice tone="accent" role="alert">
+            {error}
+          </Notice>
+        ) : null}
+      </div>
+    </Modal>
   );
 }
 

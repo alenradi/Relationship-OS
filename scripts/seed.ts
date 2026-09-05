@@ -136,6 +136,8 @@ async function main() {
 
   // Wipe couple-scoped demo rows so re-seeding is idempotent.
   for (const table of [
+    "photos",
+    "push_subscriptions",
     "goal_cheers",
     "goal_updates",
     "goals",

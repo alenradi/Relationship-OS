@@ -12,6 +12,8 @@ import {
   ratingQuestions,
   textPrompts,
 } from "@/lib/reflection";
+import { notifyPartner, sendPushToUser } from "@/lib/push";
+import { displayName } from "@/lib/people";
 import { requireCouple } from "@/lib/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -49,7 +51,7 @@ function sanitizeAnswers(answers: ReflectionAnswers): ReflectionAnswers {
 }
 
 async function persist(input: ReflectionInput, submit: boolean) {
-  const { couple, user } = await requireCouple();
+  const { couple, user, profile, partner } = await requireCouple();
   const supabase = await createSupabaseServerClient();
 
   // Current week always; previous week only Mon/Tue (1–2 days late).
@@ -85,6 +87,33 @@ async function persist(input: ReflectionInput, submit: boolean) {
 
   revalidatePath("/reflection");
   revalidatePath("/");
+
+  if (submit && partner) {
+    const { data: submitted } = await supabase
+      .from("weekly_reflections")
+      .select("user_id")
+      .eq("couple_id", couple.id)
+      .eq("week_start", input.week_start)
+      .not("submitted_at", "is", null);
+
+    const bothIn = (submitted ?? []).length >= 2;
+    if (bothIn) {
+      const payload = {
+        title: copy.push.reflectionReadyTitle,
+        body: copy.push.reflectionReadyBody,
+        url: "/reflection",
+      };
+      await sendPushToUser(user.id, payload);
+      await sendPushToUser(partner.id, payload);
+    } else {
+      await notifyPartner(partner.id, {
+        title: copy.push.reflectionSubmittedTitle,
+        body: copy.push.reflectionSubmittedBody(displayName(profile)),
+        url: "/reflection",
+      });
+    }
+  }
+
   return { ok: true };
 }
 

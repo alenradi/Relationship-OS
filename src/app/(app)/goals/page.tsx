@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/ui/page";
 import { copy } from "@/lib/copy";
+import { loadCouplePhotos } from "@/lib/photos";
 import { requireCouple } from "@/lib/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -11,7 +12,8 @@ export default async function GoalsPage() {
   const { couple, profile, partner } = await requireCouple();
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: goals }, { data: updates }, { data: cheers }] = await Promise.all([
+  const [{ data: goals }, { data: updates }, { data: cheers }, photos] =
+    await Promise.all([
     supabase
       .from("goals")
       .select("*")
@@ -27,6 +29,7 @@ export default async function GoalsPage() {
       .select("*")
       .eq("couple_id", couple.id)
       .order("created_at", { ascending: false }),
+    loadCouplePhotos(couple.id),
   ]);
 
   return (
@@ -38,6 +41,7 @@ export default async function GoalsPage() {
         goals={goals ?? []}
         updates={updates ?? []}
         cheers={cheers ?? []}
+        photos={photos}
       />
     </div>
   );

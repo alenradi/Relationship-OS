@@ -108,32 +108,68 @@ const en = {
   },
 
   onboarding: {
-    welcomeTitle: "Welcome",
+    welcomeTitle: "Your shared space",
     welcomeBody:
-      "This is a shared operating system for your relationship: what you've agreed on, how your days actually look, and how you check in with each other. Let's start with the part that matters most — your agreements.",
-    welcomeCta: "Let's begin",
-    profileTitle: "First, about you",
-    profileBody: "Your partner will see this name.",
-    constitutionIntroTitle: "Your constitution",
+      "Agreements, daily honesty, weekly check-ins, and the plans you're building together — private to the two of you.",
+    welcomeCta: "See how it works",
+    welcomeSkipTour: "Skip the tour",
+    tourEyebrow: "A quick look around",
+    tourContinue: "Continue",
+    tourSkip: "Skip tour",
+    tourOf: (current: number, total: number) => `${current} / ${total}`,
+    tour: {
+      rhythm: {
+        title: "Daily rhythm",
+        body: "A short check-in each day — energy, mood, and what filled your hours — so neither of you has to guess.",
+        highlight: "Log today in under a minute",
+      },
+      reflection: {
+        title: "Weekly reflection",
+        body: "You each answer on your own. Nothing opens until you've both submitted — then you see each other clearly.",
+        highlight: "Sealed until you're both ready",
+      },
+      constitution: {
+        title: "Your constitution",
+        body: "Agreements you chose on purpose. Review them about once a month; every change stays in history.",
+        highlight: "Written down, not assumed",
+      },
+      goals: {
+        title: "Goals & cheers",
+        body: "Three lanes — yours, theirs, and ours. Cheer each other on without turning it into a scoreboard.",
+        highlight: "Mine · yours · ours",
+      },
+      future: {
+        title: "Future & adventures",
+        body: "Date ideas, trips, and milestones you're looking forward to — kept in one calm place.",
+        highlight: "The good stuff ahead",
+      },
+    },
+    profileTitle: "What should we call you?",
+    profileBody: "This is how your partner will see you across the app.",
+    profileHint: "First names work best.",
+    constitutionIntroTitle: "Choose your first agreements",
     constitutionIntroBody:
-      "These are the agreements you're choosing on purpose, instead of the ones you drift into. Pick the ones that fit, edit the wording, skip the rest. You'll review them together about once a month — and every change is kept in history.",
+      "Pick the ones that fit, edit the wording, or write your own. You can revisit everything later — nothing here is permanent.",
     pickSuggestions: "Pick the agreements that fit you",
     suggestionsHelp:
-      "Tap to include. You can edit the wording before saving, and add your own.",
+      "Tap to include. Edit the wording before saving, or add your own.",
     addYourOwn: "Write your own agreement",
-    finishTitle: "That's your starting point",
+    finishTitle: "You're ready",
     finishBody:
-      "Your constitution is live. From here you can log your daily rhythm, and each week you'll both reflect and compare notes.",
-    finishCta: "Go to our home",
+      "Your constitution is live. Home is waiting — start with today's rhythm whenever you're ready.",
+    finishCta: "Enter our home",
     partnerWillSee: (name: string) =>
       `${name} will see all of this on their home screen too.`,
     soloFinishBody:
-      "Your constitution is live. When your partner joins, they'll see it too. Until then, you can use everything on your own.",
+      "Your constitution is live. When your partner joins, they'll see it too. Until then, everything works on your own.",
     skipForNow: "Skip for now",
     stepOf: (current: number, total: number) => `Step ${current} of ${total}`,
+    phaseTour: "Tour",
+    phaseSetup: "Setup",
     selectedCount: (n: number) =>
       n === 1 ? "1 agreement selected" : `${n} agreements selected`,
     needAtLeastOne: "Pick or write at least one agreement to continue.",
+    tourOnlyDone: "Back to home",
   },
 
   dashboard: {
@@ -405,6 +441,15 @@ const en = {
     markAchieved: "Mark as achieved",
     targetLabel: (when: string) => `Target: ${when}`,
     overdueLabel: (when: string) => `Target was ${when}`,
+    rewardTitle: "The reward",
+    rewardEmpty: "Add a photo of what you got — or did — when this landed.",
+    rewardAdd: "Add reward photo",
+    rewardReplace: "Change reward photo",
+    rewardHint: "A picture of the treat, the trip, the thing you promised yourselves.",
+    achieveWithPhotoTitle: "You did it",
+    achieveWithPhotoBody:
+      "Mark it achieved, and optionally add a photo of the reward so you remember why it was worth it.",
+    achieveConfirm: "Mark achieved",
   },
 
   conflicts: {
@@ -580,6 +625,21 @@ const en = {
     suggestAnniversary: "Our anniversary",
     suggestAdd: "Add this",
     suggestAlreadyAdded: "Already on the timeline",
+    albumTitle: "Album",
+    albumEmpty: "No photos yet. Add one when you want to remember this.",
+  },
+
+  photos: {
+    add: "Add a photo",
+    adding: "Adding…",
+    caption: "Caption",
+    captionPlaceholder: "Optional — a few words",
+    needFile: "Pick a photo first.",
+    tooLarge: "That photo is over 8 MB. Try a smaller one.",
+    badType: "Use a JPEG, PNG, WebP, or HEIC photo.",
+    view: "Open photo",
+    remove: "Remove photo",
+    count: (n: number) => (n === 1 ? "1 photo" : `${n} photos`),
   },
 
   celebrations: {
@@ -625,6 +685,41 @@ const en = {
     dangerHeading: "Careful",
     timezoneNote: (tz: string) =>
       `Dates and weeks follow ${tz.replace("_", " ")}. Weeks run Monday to Sunday.`,
+    replayTourHeading: "Intro tour",
+    replayTourBody: "See the short walkthrough of rhythm, reflections, and plans again.",
+    replayTourCta: "Replay intro",
+    pushHeading: "Notifications",
+    pushBody:
+      "Gentle pings on this phone — Sunday reflections, when they check in, and milestones coming up.",
+  },
+
+  push: {
+    enable: "Turn on notifications",
+    disable: "Turn off on this phone",
+    enabled: "This phone will get the quiet nudges.",
+    unsupported: "This browser can't receive home-screen notifications.",
+    needInstall:
+      "On iPhone, add Us to your Home Screen first, then open it from there and turn notifications on.",
+    denied:
+      "Notifications are blocked for this app. You can allow them in the phone's Settings.",
+    enableFailed: "Couldn't save this phone. Try again in a moment.",
+    reflectionSundayTitle: "Sunday check-in",
+    reflectionSundayBody: "A quiet half-hour for this week's reflection, when you're both ready.",
+    reflectionSubmittedTitle: "They submitted",
+    reflectionSubmittedBody: (name: string) =>
+      `${name} sent this week's reflection. Yours still sealed until you both have.`,
+    reflectionReadyTitle: "You can open it",
+    reflectionReadyBody: "You're both in. This week's reflection is ready to read together.",
+    datePickedTitle: "The jar picked",
+    datePickedBody: (title: string) => `You're doing: ${title}`,
+    goalAchievedTitle: "A goal landed",
+    goalAchievedBody: (name: string, title: string) =>
+      `${name} marked “${title}” as achieved.`,
+    milestoneTitle: "Coming up",
+    milestoneToday: (title: string) => `${title} is today.`,
+    milestoneTomorrow: (title: string) => `${title} is tomorrow.`,
+    rhythmTitle: "They're in",
+    rhythmBody: (name: string) => `${name} logged today.`,
   },
 
   errors: {

@@ -279,7 +279,6 @@ function FollowUpCard({ conflict }: { conflict: ConflictRow }) {
 
 function ConflictEditor({
   open,
-  me,
   partner,
   onClose,
 }: {

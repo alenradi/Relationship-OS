@@ -3,8 +3,8 @@ import type { ProfileRow } from "@/lib/database.types";
 import { initials } from "@/lib/people";
 
 /**
- * Initials-only avatar. No photo uploads: this app stores no files, and two
- * people don't need pictures to tell each other apart.
+ * Initials-only avatar. Profile photos stay out of it — memories live on
+ * dates, trips, milestones, and goal rewards instead.
  *
  * `variant` distinguishes the two of you consistently across every screen —
  * clay for you, lilac for them.

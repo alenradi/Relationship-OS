@@ -4,8 +4,8 @@ import type { Database } from "@/lib/database.types";
 import { supabaseServiceRoleKey, supabaseUrl } from "@/lib/supabase/env";
 
 /**
- * Service-role client. Bypasses row level security entirely, so it is only ever
- * used by scripts/seed.ts — never by anything that serves a request.
+ * Service-role client. Bypasses RLS. Used by seed and by server-side push
+ * (looking up every device subscription for a user).
  */
 export function createSupabaseAdminClient() {
   return createClient<Database>(supabaseUrl(), supabaseServiceRoleKey(), {

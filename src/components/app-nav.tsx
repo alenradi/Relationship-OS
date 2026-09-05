@@ -145,8 +145,8 @@ export function MobileHeader({
   return (
     <>
       <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-canvas/90 px-4 py-3 backdrop-blur lg:hidden">
-        <Link href="/">
-          <Wordmark />
+        <Link href="/" className="min-w-0" aria-label={copy.app.name}>
+          <Wordmark compact />
         </Link>
 
         <button

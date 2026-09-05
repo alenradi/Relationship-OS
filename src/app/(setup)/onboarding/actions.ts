@@ -60,6 +60,13 @@ export async function completeOnboardingAction(
 
   if (profileError) return { error: profileError.message };
 
+  // Re-running setup (e.g. after a demo reset) should replace, not stack.
+  const { error: clearError } = await supabase
+    .from("rules")
+    .delete()
+    .eq("couple_id", couple.id);
+  if (clearError) return { error: clearError.message };
+
   const { error: rulesError } = await supabase.from("rules").insert(rules);
   if (rulesError) return { error: rulesError.message };
 

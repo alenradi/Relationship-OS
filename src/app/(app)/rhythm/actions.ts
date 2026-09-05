@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { copy } from "@/lib/copy";
 import type { BusyBlock } from "@/lib/database.types";
 import { todayInAppTz } from "@/lib/dates";
+import { displayName } from "@/lib/people";
+import { notifyPartner } from "@/lib/push";
 import { requireCouple } from "@/lib/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -20,7 +22,7 @@ export type DailyStatusInput = {
 export async function saveDailyStatusAction(
   input: DailyStatusInput,
 ): Promise<DailyStatusResult> {
-  const { couple, user } = await requireCouple();
+  const { couple, user, profile, partner } = await requireCouple();
   const supabase = await createSupabaseServerClient();
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.status_date)) {
@@ -60,5 +62,10 @@ export async function saveDailyStatusAction(
 
   revalidatePath("/rhythm");
   revalidatePath("/");
+  await notifyPartner(partner?.id, {
+    title: copy.push.rhythmTitle,
+    body: copy.push.rhythmBody(displayName(profile)),
+    url: "/rhythm",
+  });
   return {};
 }

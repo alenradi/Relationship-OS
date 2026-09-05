@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { copy } from "@/lib/copy";
 import type { GoalMilestone, GoalStatus, GoalType } from "@/lib/database.types";
+import { displayName } from "@/lib/people";
+import { notifyPartner } from "@/lib/push";
 import { requireCouple } from "@/lib/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -181,15 +183,24 @@ export async function sendCheerAction(
 }
 
 export async function markAchievedAction(goalId: string): Promise<GoalResult> {
-  await requireCouple();
+  const { partner, profile } = await requireCouple();
   const supabase = await createSupabaseServerClient();
 
-  const { error } = await supabase
+  const { data: goal, error } = await supabase
     .from("goals")
     .update({ status: "achieved" })
-    .eq("id", goalId);
+    .eq("id", goalId)
+    .select("title")
+    .maybeSingle();
 
   if (error) return { error: error.message };
+  if (goal?.title) {
+    await notifyPartner(partner?.id, {
+      title: copy.push.goalAchievedTitle,
+      body: copy.push.goalAchievedBody(displayName(profile), goal.title),
+      url: "/goals",
+    });
+  }
   refresh();
   return {};
 }

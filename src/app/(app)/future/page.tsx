@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/ui/page";
 import { copy } from "@/lib/copy";
+import { loadCouplePhotos } from "@/lib/photos";
 import { requireCouple } from "@/lib/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -17,6 +18,7 @@ export default async function FuturePage() {
     { data: tasks },
     { data: activities },
     { data: milestones },
+    photos,
   ] = await Promise.all([
     supabase
       .from("date_ideas")
@@ -35,6 +37,7 @@ export default async function FuturePage() {
       .select("*")
       .eq("couple_id", couple.id)
       .order("milestone_date", { ascending: true }),
+    loadCouplePhotos(couple.id),
   ]);
 
   return (
@@ -49,6 +52,7 @@ export default async function FuturePage() {
         tasks={tasks ?? []}
         activities={activities ?? []}
         milestones={milestones ?? []}
+        photos={photos}
       />
     </div>
   );

@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 
 import { PlusIcon } from "@/components/icons";
+import { PhotoAlbum } from "@/components/photo-album";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -32,6 +33,7 @@ import {
   yearsBetween,
 } from "@/lib/dates";
 import { displayName } from "@/lib/people";
+import type { PhotoWithUrl } from "@/lib/photos";
 
 import {
   pickDateIdeaAction,
@@ -73,6 +75,7 @@ export function FutureBoard({
   tasks,
   activities,
   milestones,
+  photos,
 }: {
   couple: CoupleRow;
   me: ProfileRow;
@@ -82,22 +85,25 @@ export function FutureBoard({
   tasks: TripTaskRow[];
   activities: TripActivityRow[];
   milestones: MilestoneRow[];
+  photos: PhotoWithUrl[];
 }) {
   const members = partner ? [me, partner] : [me];
 
   return (
     <div className="space-y-12">
-      <DateJarSection ideas={ideas} members={members} />
+      <DateJarSection ideas={ideas} members={members} photos={photos} />
       <TripsSection
         trips={trips}
         tasks={tasks}
         activities={activities}
         members={members}
         partner={partner}
+        photos={photos}
       />
       <MilestonesSection
         coupleCreatedAt={couple.created_at}
         milestones={milestones}
+        photos={photos}
       />
     </div>
   );
@@ -214,9 +220,11 @@ function DateIdeaEditor({
 function DateJarSection({
   ideas,
   members,
+  photos,
 }: {
   ideas: DateIdeaRow[];
   members: ProfileRow[];
+  photos: PhotoWithUrl[];
 }) {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -302,6 +310,12 @@ function DateJarSection({
               {copy.future.putBack}
             </Button>
           </div>
+          <PhotoAlbum
+            subjectType="date_idea"
+            subjectId={picked.id}
+            photos={photos}
+            compact
+          />
         </Card>
       ) : null}
 
@@ -342,12 +356,21 @@ function DateJarSection({
       )}
 
       {done.length > 0 ? (
-        <div className="space-y-2 pt-4">
+        <div className="space-y-3 pt-4">
           <h3 className="text-sm font-medium text-ink-soft">{copy.future.doneIdeas}</h3>
-          <ul className="space-y-1">
+          <ul className="grid gap-3 sm:grid-cols-2">
             {done.map((idea) => (
-              <li key={idea.id} className="text-sm text-ink-faint line-through">
-                {idea.title}
+              <li
+                key={idea.id}
+                className="space-y-2 rounded-xl border border-line bg-surface px-4 py-3"
+              >
+                <p className="text-sm font-medium text-ink text-pretty">{idea.title}</p>
+                <PhotoAlbum
+                  subjectType="date_idea"
+                  subjectId={idea.id}
+                  photos={photos}
+                  compact
+                />
               </li>
             ))}
           </ul>
@@ -493,12 +516,14 @@ function TripCard({
   activities,
   members,
   partner,
+  photos,
 }: {
   trip: TripRow;
   tasks: TripTaskRow[];
   activities: TripActivityRow[];
   members: ProfileRow[];
   partner: ProfileRow | null;
+  photos: PhotoWithUrl[];
 }) {
   const today = todayInAppTz();
   const [taskTitle, setTaskTitle] = useState("");
@@ -540,6 +565,8 @@ function TripCard({
       {trip.notes ? (
         <p className="text-sm leading-relaxed text-ink-soft text-pretty">{trip.notes}</p>
       ) : null}
+
+      <PhotoAlbum subjectType="trip" subjectId={trip.id} photos={photos} />
 
       <div className="flex flex-wrap gap-2">
         <Badge tone="accent">{copy.future.tripStatuses[trip.status]}</Badge>
@@ -715,12 +742,14 @@ function TripsSection({
   activities,
   members,
   partner,
+  photos,
 }: {
   trips: TripRow[];
   tasks: TripTaskRow[];
   activities: TripActivityRow[];
   members: ProfileRow[];
   partner: ProfileRow | null;
+  photos: PhotoWithUrl[];
 }) {
   const [creating, setCreating] = useState(false);
 
@@ -764,6 +793,7 @@ function TripsSection({
               tasks={tasks.filter((t) => t.trip_id === trip.id)}
               activities={activities.filter((a) => a.trip_id === trip.id)}
               members={members}
+              photos={photos}
               partner={partner}
             />
           ))}
@@ -894,9 +924,11 @@ function MilestoneEditor({
 function MilestoneItem({
   milestone,
   today,
+  photos,
 }: {
   milestone: MilestoneRow;
   today: string;
+  photos: PhotoWithUrl[];
 }) {
   const displayDate = milestone.recurs_annually
     ? nextAnnualOccurrence(milestone.milestone_date, today)
@@ -937,6 +969,12 @@ function MilestoneItem({
           <Badge tone="sage">{copy.future.anniversaryYears(years)}</Badge>
         ) : null}
       </div>
+      <PhotoAlbum
+        subjectType="milestone"
+        subjectId={milestone.id}
+        photos={photos}
+        compact
+      />
     </li>
   );
 }
@@ -944,9 +982,11 @@ function MilestoneItem({
 function MilestonesSection({
   coupleCreatedAt,
   milestones,
+  photos,
 }: {
   coupleCreatedAt: string;
   milestones: MilestoneRow[];
+  photos: PhotoWithUrl[];
 }) {
   const today = todayInAppTz();
   const [creating, setCreating] = useState(false);
@@ -1103,7 +1143,12 @@ function MilestonesSection({
               </h3>
               <ul className="space-y-2">
                 {upcoming.map((milestone) => (
-                  <MilestoneItem key={milestone.id} milestone={milestone} today={today} />
+                  <MilestoneItem
+                    key={milestone.id}
+                    milestone={milestone}
+                    today={today}
+                    photos={photos}
+                  />
                 ))}
               </ul>
             </div>
@@ -1116,7 +1161,12 @@ function MilestonesSection({
               </h3>
               <ul className="space-y-2">
                 {past.map((milestone) => (
-                  <MilestoneItem key={milestone.id} milestone={milestone} today={today} />
+                  <MilestoneItem
+                    key={milestone.id}
+                    milestone={milestone}
+                    today={today}
+                    photos={photos}
+                  />
                 ))}
               </ul>
             </div>

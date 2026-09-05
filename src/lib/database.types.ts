@@ -55,7 +55,11 @@ export type CoupleEventKind =
   | "date_idea_added"
   | "date_picked"
   | "date_done"
-  | "milestone_added";
+  | "milestone_added"
+  | "photo_added";
+
+export type PhotoSubjectType = "date_idea" | "trip" | "milestone" | "goal";
+export type PhotoKind = "memory" | "reward";
 
 /** One entry in daily_status.busy_blocks — free-text label like "work 8-16". */
 export type BusyBlock = {
@@ -261,6 +265,28 @@ export type MilestoneRow = {
   created_by: string | null;
 } & Timestamps;
 
+export type PushSubscriptionRow = {
+  id: string;
+  user_id: string;
+  couple_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  user_agent: string;
+} & Timestamps;
+
+export type PhotoRow = {
+  id: string;
+  couple_id: string;
+  subject_type: PhotoSubjectType;
+  subject_id: string;
+  storage_path: string;
+  caption: string;
+  kind: PhotoKind;
+  created_by: string | null;
+  created_at: string;
+};
+
 /** Column defaults mean almost everything is optional on insert. */
 type Insertable<T, Required extends keyof T = never> = Partial<
   Omit<T, "id" | "created_at" | "updated_at">
@@ -348,6 +374,16 @@ export type Database = {
         MilestoneRow,
         Insertable<MilestoneRow, "title" | "milestone_date">,
         Partial<MilestoneRow>
+      >;
+      photos: TableDef<
+        PhotoRow,
+        Insertable<PhotoRow, "subject_type" | "subject_id" | "storage_path">,
+        Partial<PhotoRow>
+      >;
+      push_subscriptions: TableDef<
+        PushSubscriptionRow,
+        Insertable<PushSubscriptionRow, "user_id" | "endpoint" | "p256dh" | "auth">,
+        Partial<PushSubscriptionRow>
       >;
     };
     Views: Record<never, never>;

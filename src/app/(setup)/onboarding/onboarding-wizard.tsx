@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
+import { AppLogo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -12,6 +14,7 @@ import { copy } from "@/lib/copy";
 import type { RuleCategory } from "@/lib/database.types";
 
 import { completeOnboardingAction } from "./actions";
+import { OnboardingTour } from "./onboarding-tour";
 
 type Draft = {
   key: string;
@@ -23,7 +26,10 @@ type Draft = {
   custom: boolean;
 };
 
-const TOTAL_STEPS = 4;
+type Step = "welcome" | "tour" | "profile" | "constitution" | "finish";
+
+const SETUP_STEPS: Step[] = ["profile", "constitution", "finish"];
+const ALL_STEPS: Step[] = ["welcome", "tour", ...SETUP_STEPS];
 
 const CATEGORY_ORDER: RuleCategory[] = [
   "communication",
@@ -49,20 +55,29 @@ export function OnboardingWizard({
   initialDisplayName,
   partnerName,
   solo = false,
+  tourOnly = false,
 }: {
   initialDisplayName: string;
   partnerName: string;
   solo?: boolean;
+  /** Already onboarded — show welcome + feature tour, then return home. */
+  tourOnly?: boolean;
 }) {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState<Step>("welcome");
   const [name, setName] = useState(initialDisplayName);
   const [drafts, setDrafts] = useState<Draft[]>(initialDrafts);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, startSaving] = useTransition();
+  const router = useRouter();
 
   const chosen = useMemo(() => drafts.filter((d) => d.selected), [drafts]);
+
+  function finishTourOnly() {
+    router.push("/");
+    router.refresh();
+  }
 
   const grouped = useMemo(() => {
     return CATEGORY_ORDER.map((category) => ({
@@ -70,6 +85,9 @@ export function OnboardingWizard({
       items: drafts.filter((d) => d.category === category),
     })).filter((group) => group.items.length > 0);
   }, [drafts]);
+
+  const setupIndex = SETUP_STEPS.indexOf(step as (typeof SETUP_STEPS)[number]);
+  const overallIndex = ALL_STEPS.indexOf(step);
 
   function update(key: string, patch: Partial<Draft>) {
     setDrafts((current) =>
@@ -92,20 +110,27 @@ export function OnboardingWizard({
     setCustomOpen(false);
   }
 
-  function goNext() {
+  function goTo(next: Step) {
     setError(null);
+    setStep(next);
+  }
 
-    if (step === 1 && !name.trim()) {
+  function goNextFromProfile() {
+    setError(null);
+    if (!name.trim()) {
       setError(copy.errors.required);
       return;
     }
+    goTo("constitution");
+  }
 
-    if (step === 2 && chosen.length === 0) {
+  function goNextFromConstitution() {
+    setError(null);
+    if (chosen.length === 0) {
       setError(copy.onboarding.needAtLeastOne);
       return;
     }
-
-    setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
+    goTo("finish");
   }
 
   function finish() {
@@ -125,74 +150,78 @@ export function OnboardingWizard({
   }
 
   return (
-    <div className="space-y-6 py-4">
-      <div className="flex items-center gap-3">
-        <div className="flex flex-1 gap-1.5" aria-hidden>
-          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-            <span
-              key={i}
-              className={cn(
-                "h-1.5 flex-1 rounded-full transition-colors",
-                i <= step ? "bg-accent" : "bg-line",
-              )}
-            />
-          ))}
+    <div className="space-y-6 py-2 sm:py-4">
+      {step !== "welcome" && !tourOnly ? (
+        <ProgressHeader
+          step={step}
+          overallIndex={overallIndex}
+          setupIndex={setupIndex}
+        />
+      ) : null}
+
+      {step === "welcome" ? (
+        <WelcomeStep
+          onStart={() => goTo("tour")}
+          onSkip={() =>
+            tourOnly ? finishTourOnly() : goTo("profile")
+          }
+        />
+      ) : null}
+
+      {step === "tour" ? (
+        <OnboardingTour
+          onComplete={() =>
+            tourOnly ? finishTourOnly() : goTo("profile")
+          }
+          onSkip={() =>
+            tourOnly ? finishTourOnly() : goTo("profile")
+          }
+        />
+      ) : null}
+
+      {step === "profile" ? (
+        <div key="profile" className="mx-auto max-w-xl animate-rise space-y-5">
+          <Card className="space-y-5">
+            <div className="space-y-1.5">
+              <CardTitle as="h1" className="text-2xl sm:text-3xl">
+                {copy.onboarding.profileTitle}
+              </CardTitle>
+              <CardDescription>{copy.onboarding.profileBody}</CardDescription>
+            </div>
+
+            <Field label={copy.auth.displayName} htmlFor="display_name">
+              <Input
+                id="display_name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder={copy.auth.displayNamePlaceholder}
+                autoFocus
+              />
+            </Field>
+            <p className="text-xs text-ink-faint">{copy.onboarding.profileHint}</p>
+
+            {error ? (
+              <Notice tone="accent" role="alert">
+                {error}
+              </Notice>
+            ) : null}
+
+            <div className="flex items-center justify-between gap-2">
+              <Button variant="ghost" onClick={() => goTo("tour")}>
+                {copy.app.back}
+              </Button>
+              <Button size="lg" onClick={goNextFromProfile}>
+                {copy.app.next}
+              </Button>
+            </div>
+          </Card>
         </div>
-        <span className="shrink-0 text-xs text-ink-faint">
-          {copy.onboarding.stepOf(step + 1, TOTAL_STEPS)}
-        </span>
-      </div>
-
-      {step === 0 ? (
-        <Card className="space-y-4">
-          <CardTitle as="h1" className="text-2xl">
-            {copy.onboarding.welcomeTitle}
-          </CardTitle>
-          <CardDescription>{copy.onboarding.welcomeBody}</CardDescription>
-          <Button size="lg" onClick={goNext}>
-            {copy.onboarding.welcomeCta}
-          </Button>
-        </Card>
       ) : null}
 
-      {step === 1 ? (
-        <Card className="space-y-5">
-          <div className="space-y-1.5">
-            <CardTitle as="h1" className="text-2xl">
-              {copy.onboarding.profileTitle}
-            </CardTitle>
-            <CardDescription>{copy.onboarding.profileBody}</CardDescription>
-          </div>
-
-          <Field label={copy.auth.displayName} htmlFor="display_name">
-            <Input
-              id="display_name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={copy.auth.displayNamePlaceholder}
-              autoFocus
-            />
-          </Field>
-
-          {error ? (
-            <Notice tone="accent" role="alert">
-              {error}
-            </Notice>
-          ) : null}
-
-          <div className="flex items-center justify-between gap-2">
-            <Button variant="ghost" onClick={() => setStep(0)}>
-              {copy.app.back}
-            </Button>
-            <Button onClick={goNext}>{copy.app.next}</Button>
-          </div>
-        </Card>
-      ) : null}
-
-      {step === 2 ? (
-        <div className="space-y-5">
+      {step === "constitution" ? (
+        <div key="constitution" className="mx-auto max-w-2xl animate-rise space-y-5">
           <Card className="space-y-2">
-            <CardTitle as="h1" className="text-2xl">
+            <CardTitle as="h1" className="text-2xl sm:text-3xl">
               {copy.onboarding.constitutionIntroTitle}
             </CardTitle>
             <CardDescription>
@@ -268,7 +297,9 @@ export function OnboardingWizard({
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setExpanded(isOpen ? null : draft.key)}
+                              onClick={() =>
+                                setExpanded(isOpen ? null : draft.key)
+                              }
                             >
                               {isOpen ? copy.app.done : copy.app.edit}
                             </Button>
@@ -285,7 +316,9 @@ export function OnboardingWizard({
                                 id={`${draft.key}-title`}
                                 value={draft.title}
                                 onChange={(event) =>
-                                  update(draft.key, { title: event.target.value })
+                                  update(draft.key, {
+                                    title: event.target.value,
+                                  })
                                 }
                               />
                             </Field>
@@ -342,10 +375,10 @@ export function OnboardingWizard({
               {copy.onboarding.selectedCount(chosen.length)}
             </span>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={() => setStep(1)}>
+              <Button variant="ghost" onClick={() => goTo("profile")}>
                 {copy.app.back}
               </Button>
-              <Button onClick={goNext}>{copy.app.next}</Button>
+              <Button onClick={goNextFromConstitution}>{copy.app.next}</Button>
             </div>
           </div>
 
@@ -357,10 +390,10 @@ export function OnboardingWizard({
         </div>
       ) : null}
 
-      {step === 3 ? (
-        <div className="space-y-5">
+      {step === "finish" ? (
+        <div key="finish" className="mx-auto max-w-xl animate-rise space-y-5">
           <Card className="space-y-2">
-            <CardTitle as="h1" className="text-2xl">
+            <CardTitle as="h1" className="text-2xl sm:text-3xl">
               {copy.onboarding.finishTitle}
             </CardTitle>
             <CardDescription>
@@ -403,7 +436,11 @@ export function OnboardingWizard({
           ) : null}
 
           <div className="flex items-center justify-between gap-2">
-            <Button variant="ghost" onClick={() => setStep(2)} disabled={saving}>
+            <Button
+              variant="ghost"
+              onClick={() => goTo("constitution")}
+              disabled={saving}
+            >
               {copy.app.back}
             </Button>
             <Button size="lg" onClick={finish} disabled={saving}>
@@ -412,6 +449,109 @@ export function OnboardingWizard({
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function WelcomeStep({
+  onStart,
+  onSkip,
+}: {
+  onStart: () => void;
+  onSkip: () => void;
+}) {
+  return (
+    <section className="relative mx-auto flex min-h-[70dvh] max-w-2xl flex-col items-center justify-center py-8 text-center">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-8 -z-10 mx-auto h-56 w-56 rounded-full bg-accent/15 blur-3xl animate-soft-pulse"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-x-20 top-24 -z-10 mx-auto h-40 w-40 rounded-full bg-lilac/10 blur-3xl"
+        aria-hidden
+      />
+
+      <div className="animate-stagger flex flex-col items-center gap-6">
+        <div className="animate-float">
+          <AppLogo className="size-[4.5rem] rounded-[1.5rem] shadow-lifted" />
+        </div>
+
+        <div className="space-y-3">
+          <p className="text-sm font-medium tracking-wide text-accent-ink">
+            {copy.app.name}
+          </p>
+          <h1 className="font-serif text-4xl tracking-tight text-balance sm:text-5xl">
+            {copy.onboarding.welcomeTitle}
+          </h1>
+          <p className="mx-auto max-w-md text-base leading-relaxed text-ink-soft text-pretty sm:text-lg">
+            {copy.onboarding.welcomeBody}
+          </p>
+        </div>
+
+        <div className="flex w-full max-w-sm flex-col items-stretch gap-3 pt-2 sm:max-w-none sm:flex-row sm:justify-center">
+          <Button size="lg" onClick={onStart}>
+            {copy.onboarding.welcomeCta}
+          </Button>
+          <Button size="lg" variant="ghost" onClick={onSkip}>
+            {copy.onboarding.welcomeSkipTour}
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProgressHeader({
+  step,
+  overallIndex,
+  setupIndex,
+}: {
+  step: Step;
+  overallIndex: number;
+  setupIndex: number;
+}) {
+  const inSetup = setupIndex >= 0;
+
+  return (
+    <div className="mx-auto flex max-w-2xl flex-col gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs font-medium">
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 transition",
+              step === "tour"
+                ? "bg-accent-soft text-accent-ink"
+                : "text-ink-faint",
+            )}
+          >
+            {copy.onboarding.phaseTour}
+          </span>
+          <span className="text-ink-faint">·</span>
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 transition",
+              inSetup ? "bg-accent-soft text-accent-ink" : "text-ink-faint",
+            )}
+          >
+            {copy.onboarding.phaseSetup}
+          </span>
+        </div>
+        <span className="shrink-0 text-xs text-ink-faint">
+          {copy.onboarding.stepOf(overallIndex + 1, ALL_STEPS.length)}
+        </span>
+      </div>
+
+      <div className="flex flex-1 gap-1.5" aria-hidden>
+        {ALL_STEPS.map((item, i) => (
+          <span
+            key={item}
+            className={cn(
+              "h-1.5 flex-1 rounded-full transition-colors duration-300",
+              i <= overallIndex ? "bg-accent" : "bg-line",
+            )}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -472,7 +612,9 @@ function CustomRuleModal({
           <Select
             id="custom-category"
             value={category}
-            onChange={(event) => setCategory(event.target.value as RuleCategory)}
+            onChange={(event) =>
+              setCategory(event.target.value as RuleCategory)
+            }
           >
             {CATEGORY_ORDER.map((option) => (
               <option key={option} value={option}>

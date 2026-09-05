@@ -8,6 +8,7 @@ import type {
   MilestoneKind,
   TripStatus,
 } from "@/lib/database.types";
+import { notifyPartner } from "@/lib/push";
 import { requireCouple } from "@/lib/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -82,9 +83,17 @@ export async function saveDateIdeaAction(
 }
 
 export async function pickDateIdeaAction(): Promise<FutureResult> {
+  const { partner } = await requireCouple();
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.rpc("pick_date_idea");
   if (error) return { error: error.message };
+  if (data?.title) {
+    await notifyPartner(partner?.id, {
+      title: copy.push.datePickedTitle,
+      body: copy.push.datePickedBody(data.title),
+      url: "/future",
+    });
+  }
   refresh();
   return { title: data?.title };
 }

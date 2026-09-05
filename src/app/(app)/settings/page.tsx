@@ -1,7 +1,8 @@
 import { SignOutButton } from "@/components/sign-out-button";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardTitle } from "@/components/ui/card";
+import { ButtonLink } from "@/components/ui/button";
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page";
 import { copy } from "@/lib/copy";
 import { APP_TIMEZONE, formatLongDate } from "@/lib/dates";
@@ -9,6 +10,7 @@ import { displayName } from "@/lib/people";
 import { requireCouple } from "@/lib/session";
 
 import { ProfileForm } from "./profile-form";
+import { PushToggle } from "./push-toggle";
 
 export const metadata = { title: copy.settings.title };
 
@@ -64,6 +66,28 @@ export default async function SettingsPage() {
         </p>
 
         <Badge tone="neutral">{copy.settings.timezoneNote(APP_TIMEZONE)}</Badge>
+      </Card>
+
+      <Card className="space-y-4">
+        <div className="space-y-1">
+          <CardTitle as="h2" className="text-base">
+            {copy.settings.pushHeading}
+          </CardTitle>
+          <CardDescription>{copy.settings.pushBody}</CardDescription>
+        </div>
+        <PushToggle vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""} />
+      </Card>
+
+      <Card className="flex flex-wrap items-center justify-between gap-3">
+        <div className="space-y-1">
+          <CardTitle as="h2" className="text-base">
+            {copy.settings.replayTourHeading}
+          </CardTitle>
+          <CardDescription>{copy.settings.replayTourBody}</CardDescription>
+        </div>
+        <ButtonLink href="/onboarding?tour=1" variant="secondary">
+          {copy.settings.replayTourCta}
+        </ButtonLink>
       </Card>
 
       <Card tone="muted" className="flex flex-wrap items-center justify-between gap-3">

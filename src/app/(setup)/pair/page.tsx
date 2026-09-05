@@ -18,12 +18,18 @@ export default async function PairPage() {
 
   if (couple) {
     return (
-      <InviteCodePanel
-        inviteCode={couple.invite_code}
-        onboarded={Boolean(couple.onboarding_completed_at)}
-      />
+      <div className="mx-auto w-full max-w-2xl">
+        <InviteCodePanel
+          inviteCode={couple.invite_code}
+          onboarded={Boolean(couple.onboarding_completed_at)}
+        />
+      </div>
     );
   }
 
-  return <PairChoice />;
+  return (
+    <div className="mx-auto w-full max-w-2xl">
+      <PairChoice />
+    </div>
+  );
 }
